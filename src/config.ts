@@ -16,6 +16,10 @@ export interface Config {
   registryUrl?: string;
   networkSubgraphId: string;
   walletProvider?: string;
+  ampersend: boolean;
+  ampersendSmartAccount?: Address;
+  ampersendSessionKey?: `0x${string}`;
+  ampersendApiUrl?: string;
 }
 
 interface NetParams {
@@ -66,18 +70,31 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const net = NETWORKS[network];
 
   const privateKey = normalizePrivateKey(env.PAYQL_PRIVATE_KEY ?? env.X402_PRIVATE_KEY);
+  const walletProvider = env.PAYQL_WALLET_PROVIDER?.trim() || undefined;
+
+  // Ampersend (managed-wallet) config — ERC-4337 smart account + session key.
+  // Accept PayQL-prefixed names or Ampersend's own AMPERSEND_AGENT_* env vars.
+  const ampersendSmartAccount = (env.PAYQL_AMPERSEND_SMART_ACCOUNT?.trim() ||
+    env.AMPERSEND_AGENT_ACCOUNT?.trim() ||
+    undefined) as Address | undefined;
+  const ampersendSessionKey = normalizePrivateKey(env.PAYQL_AMPERSEND_SESSION_KEY ?? env.AMPERSEND_AGENT_KEY);
+  const ampersendApiUrl = env.PAYQL_AMPERSEND_API_URL?.trim() || env.AMPERSEND_API_URL?.trim() || undefined;
 
   let paymentMode = (env.PAYQL_PAYMENT_MODE?.trim() as PaymentMode) || (privateKey ? "wallet" : "harness");
   if (!["wallet", "harness", "managed"].includes(paymentMode)) {
     throw new Error(`PAYQL_PAYMENT_MODE must be "wallet", "harness" or "managed" (got "${paymentMode}").`);
   }
-  // A paying mode without a key can't sign — degrade to harness so the server
-  // still boots and can quote prices / hand 402s to a wallet-equipped harness.
-  if ((paymentMode === "wallet" || paymentMode === "managed") && !privateKey) {
+  // Can this mode actually sign? BYO needs a private key; Ampersend needs its
+  // smart account + session key. If not, degrade to harness so the server still
+  // boots (quote-only / hand 402s to a wallet-equipped harness).
+  const wantsAmpersend = paymentMode === "managed" && walletProvider === "ampersend";
+  const canSign = wantsAmpersend ? !!(ampersendSmartAccount && ampersendSessionKey) : !!privateKey;
+  if ((paymentMode === "wallet" || paymentMode === "managed") && !canSign) {
     paymentMode = "harness";
   }
+  const ampersend = paymentMode === "managed" && walletProvider === "ampersend";
 
-  const maxUsdPerQuery = env.PAYQL_MAX_USD_PER_QUERY ? Number(env.PAYQL_MAX_USD_PER_QUERY) : 0.1;
+  const maxUsdPerQuery = env.PAYQL_MAX_USD_PER_QUERY ? Number(env.PAYQL_MAX_USD_PER_QUERY) : 0.01;
   if (!Number.isFinite(maxUsdPerQuery) || maxUsdPerQuery <= 0) {
     throw new Error("PAYQL_MAX_USD_PER_QUERY must be a positive number (USD).");
   }
@@ -94,6 +111,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxUsdPerQuery,
     registryUrl: env.PAYQL_REGISTRY_URL?.trim() || undefined,
     networkSubgraphId: env.PAYQL_NETWORK_SUBGRAPH_ID?.trim() || DEFAULT_NETWORK_SUBGRAPH,
-    walletProvider: env.PAYQL_WALLET_PROVIDER?.trim() || undefined,
+    walletProvider,
+    ampersend,
+    ampersendSmartAccount,
+    ampersendSessionKey,
+    ampersendApiUrl,
   };
 }

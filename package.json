@@ -44,6 +44,14 @@
     "viem": "^2.21.0",
     "zod": "^3.25.0"
   },
+  "peerDependencies": {
+    "@ampersend_ai/ampersend-sdk": ">=0.0.28"
+  },
+  "peerDependenciesMeta": {
+    "@ampersend_ai/ampersend-sdk": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"

@@ -15,7 +15,7 @@ The Graph's gateway now speaks x402: an unpaid request gets a `402 Payment Requi
 - **Gasless.** Payments use EIP-3009 `transferWithAuthorization` (the `exact` scheme on Base). You sign off-chain; the facilitator submits the tx and pays gas. **A USDC-only wallet is enough — no ETH.**
 - **Keyless.** The x402 gateway path needs no API key or account.
 - **Wallet-agnostic.** PayQL just speaks x402 — *which* wallet pays is config. BYO key, a managed/capped wallet (e.g. Ampersend), or hand the 402 to a wallet-equipped harness. Same code path.
-- **Bounded.** A hard per-query USD cap, a price preflight, and a clear "fund your wallet" message when balance runs low.
+- **Bounded & predictable.** Queries are ~$0.01, and the per-query cap defaults to $0.01 — so an agent never pays more than the going rate. A price preflight and a clear "fund your wallet" message round it out.
 
 ## How it works
 
@@ -37,7 +37,96 @@ Discovery is ranked by on-chain curation signal (a popularity proxy) so you get 
 | `get_subgraph_schema` | yes | List a subgraph's root queryable entities (GraphQL introspection). |
 | `wallet_status` | free | Payment mode, wallet address, USDC/ETH balance, spend cap, funding instructions. Never reveals the key. |
 
-> By default `search_subgraphs` / `get_subgraph_schema` run a tiny *paid* x402 query against The Graph's network subgraph. Point `PAYQL_REGISTRY_URL` at a free GraphQL discovery source (e.g. your own curated registry) to make discovery free.
+> By default `search_subgraphs` runs a tiny *paid* x402 query against The Graph's network subgraph; point `PAYQL_REGISTRY_URL` at a free GraphQL source (e.g. your own curated registry) to make it free. `get_subgraph_schema` introspects the target subgraph directly, so it's always a paid query.
+
+---
+
+## Example — end to end
+
+A typical agent loop is **discover → price → query**. Tool calls take JSON arguments; results come back as JSON. (The `get_payment_info` output below is a real preflight against the live gateway; search/query payloads are abridged for illustration.)
+
+**1. Find the right subgraph**
+
+```jsonc
+// call → search_subgraphs
+{ "query": "uniswap v3", "first": 3 }
+```
+```jsonc
+// result (abridged) — ranked by on-chain curation signal
+{
+  "ok": true,
+  "source": "x402:graph-network-subgraph",
+  "count": 3,
+  "results": [
+    {
+      "displayName": "Uniswap V3",
+      "subgraphId": "5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV",
+      "ipfsHash": "QmZ...",
+      "currentSignalledTokensGRT": 48210.5,
+      "queryFeesGRT": 1203.7,
+      "categories": ["DeFi", "DEX"],
+      "queryUrl": "https://gateway.thegraph.com/api/x402/subgraphs/id/5zvR82Qo..."
+    }
+  ],
+  "payment": { "paid": true, "amountUsd": 0.01, "txHash": "0x9f…", "network": "eip155:8453" }
+}
+```
+
+**2. Check the price — free, no payment**
+
+```jsonc
+// call → get_payment_info
+{ "subgraph_id": "5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV" }
+```
+```jsonc
+// result — real live preflight; the price comes from the 402 challenge
+{
+  "ok": true,
+  "paywalled": true,
+  "priceUsd": 0.01,
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "payTo": "0x79DC34E41B2b591078d3dE222C43EcaaBD52FcCB",
+  "network": "eip155:8453",
+  "scheme": "exact",
+  "withinCap": true,
+  "capUsd": 0.01
+}
+```
+
+**3. Run the query — pays $0.01 USDC, gasless**
+
+```jsonc
+// call → query_subgraph
+{
+  "subgraph_id": "5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV",
+  "query": "{ pools(first: 2, orderBy: volumeUSD, orderDirection: desc) { token0 { symbol } token1 { symbol } volumeUSD } }"
+}
+```
+```jsonc
+// result — data + a payment receipt (tx hash + amount actually paid)
+{
+  "ok": true,
+  "data": {
+    "pools": [
+      { "token0": { "symbol": "USDC" }, "token1": { "symbol": "WETH" }, "volumeUSD": "1234567890.12" },
+      { "token0": { "symbol": "WBTC" }, "token1": { "symbol": "WETH" }, "volumeUSD": "987654321.00" }
+    ]
+  },
+  "payment": { "paid": true, "amountUsd": 0.01, "txHash": "0xabc123…", "network": "eip155:8453" }
+}
+```
+
+**If the wallet is empty**, you don't get a silent failure — you get what you owe and how to fund it:
+
+```jsonc
+{
+  "ok": false,
+  "error": "insufficient_funds",
+  "message": "Need 0.0100 USDC for this query but the wallet holds 0.0000 USDC.\n\nThis wallet needs USDC on base ... (gasless: USDC only, no ETH) ... Ways to fund: ..."
+}
+```
+
+**Check the wallet anytime** with `wallet_status` → `{ "paymentMode": "wallet", "address": "0x…", "usdcBalance": "5.000000", "gaslessPayments": true, "maxUsdPerQuery": 0.01 }`
 
 ---
 
@@ -64,7 +153,7 @@ npm run build
       "env": {
         "PAYQL_NETWORK": "base",
         "PAYQL_PRIVATE_KEY": "0xYOUR_BASE_WALLET_KEY",
-        "PAYQL_MAX_USD_PER_QUERY": "0.10"
+        "PAYQL_MAX_USD_PER_QUERY": "0.01"
       }
     }
   }
@@ -77,7 +166,7 @@ npm run build
 claude mcp add payql \
   -e PAYQL_NETWORK=base \
   -e PAYQL_PRIVATE_KEY=0xYOUR_BASE_WALLET_KEY \
-  -e PAYQL_MAX_USD_PER_QUERY=0.10 \
+  -e PAYQL_MAX_USD_PER_QUERY=0.01 \
   -- node /ABSOLUTE/PATH/payql/dist/index.js
 ```
 
@@ -87,15 +176,37 @@ claude mcp add payql \
 
 ---
 
-## Wallet modes — BYO, harness, or managed
+## Wallet modes — BYO, harness, or managed (Ampersend)
 
-PayQL supports all three through the *same* x402 interface. Set `PAYQL_PAYMENT_MODE`:
+PayQL supports all three through the *same* x402 interface — *which* wallet pays is just config. Set `PAYQL_PAYMENT_MODE`:
 
-- **`wallet` (default, BYO)** — sign payments with `PAYQL_PRIVATE_KEY`. Works in any harness, zero dependencies. This is the floor.
+- **`wallet` (default, BYO)** — sign payments with `PAYQL_PRIVATE_KEY`. Works in any harness, zero extra deps. This is the floor.
 - **`harness`** — *don't* hold a key. PayQL returns the payable URL + the 402 quote, and your wallet-equipped harness (e.g. an agent with a `pay-for-service` skill) settles it. The server never touches a key.
-- **`managed`** — the `wallet` signing path, intended for a managed/capped wallet such as **Ampersend**. Set `PAYQL_WALLET_PROVIDER=ampersend`. (The signer is the configured key today; a remote-signer adapter is the clean extension point.)
+- **`managed` (Ampersend)** — pay through an [Ampersend](https://ampersend.ai)-managed smart account, with **spend limits, allowlists and auto-top-ups enforced server-side by Ampersend** — not just PayQL's local cap. See below.
 
 You don't have to choose globally — the same build does all three depending on config.
+
+### Using Ampersend (optional)
+
+[Ampersend](https://github.com/edgeandnode/ampersend-sdk) (by Edge & Node) is a control layer for agent payments built on x402: per-transaction / daily / monthly limits, seller allowlists, auto-top-ups, and self-custodied keys. PayQL integrates it as an **opt-in** dependency — it is never installed or loaded unless you choose this mode.
+
+1. **Install the SDK** (only for this mode):
+   ```bash
+   npm i @ampersend_ai/ampersend-sdk
+   ```
+2. **Create an agent + smart account** in Ampersend and set its spend policy ([docs.ampersend.ai](https://docs.ampersend.ai)). You'll get a **smart-account address** and a **session key**.
+3. **Configure PayQL:**
+   ```bash
+   PAYQL_PAYMENT_MODE=managed
+   PAYQL_WALLET_PROVIDER=ampersend
+   PAYQL_AMPERSEND_SMART_ACCOUNT=0xYourSmartAccount
+   PAYQL_AMPERSEND_SESSION_KEY=0xYourSessionKey     # or set AMPERSEND_AGENT_ACCOUNT / AMPERSEND_AGENT_KEY
+   # PAYQL_AMPERSEND_API_URL=...                    # optional; defaults to Ampersend production
+   ```
+
+Now every paid query is authorized against your Ampersend policy **before** it's signed — exceed a limit or hit a disallowed payee and Ampersend declines it, which PayQL surfaces as a clear message. Funding/top-ups live in Ampersend, so the BYO "fund your wallet" path doesn't apply.
+
+> Built against `@ampersend_ai/ampersend-sdk@0.0.28` (pre-1.0). Its `createAmpersendHttpClient(...)` returns an x402 client that PayQL hands into the very same `wrapFetchWithPayment` path it uses for BYO. The SDK bundles its own `@x402/*` (v2); if a future version diverges, pin and re-verify.
 
 ## Funding (USDC only — no gas)
 
@@ -115,9 +226,10 @@ x402 payments are gasless, so the floor to *use* PayQL is **USDC on Base**. To f
 | `PAYQL_NETWORK` | `base` | `base` or `base-sepolia` |
 | `PAYQL_PAYMENT_MODE` | `wallet` if key set, else `harness` | `wallet` \| `harness` \| `managed` |
 | `PAYQL_PRIVATE_KEY` | — | BYO Base wallet key (or `X402_PRIVATE_KEY`). Never logged. |
-| `PAYQL_MAX_USD_PER_QUERY` | `0.10` | Hard ceiling per query; quotes above are refused. |
+| `PAYQL_MAX_USD_PER_QUERY` | `0.01` | Max you'll pay per query. Defaults to the $0.01 rate so you never pay more; a higher quote is refused (preflight shows it first). |
 | `PAYQL_REGISTRY_URL` | — | Optional free GraphQL endpoint for discovery. |
-| `PAYQL_WALLET_PROVIDER` | — | Informational, e.g. `ampersend`. |
+| `PAYQL_WALLET_PROVIDER` | — | Set to `ampersend` (with `PAYQL_PAYMENT_MODE=managed`) to pay via an Ampersend-managed wallet. |
+| `PAYQL_AMPERSEND_SMART_ACCOUNT` / `PAYQL_AMPERSEND_SESSION_KEY` | — | Ampersend smart-account address + session key (or `AMPERSEND_AGENT_ACCOUNT` / `AMPERSEND_AGENT_KEY`). Needs `npm i @ampersend_ai/ampersend-sdk`. |
 | `PAYQL_RPC_URL` / `PAYQL_GATEWAY_BASE` / `PAYQL_USDC_ADDRESS` / `PAYQL_NETWORK_SUBGRAPH_ID` | per-network | Advanced overrides. |
 
 ## Security

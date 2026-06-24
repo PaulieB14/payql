@@ -5,6 +5,7 @@ import { createPublicClient, http, erc20Abi, formatUnits, type Address } from "v
 import { base, baseSepolia } from "viem/chains";
 import type { Config } from "./config.js";
 import { fundingGuidance } from "./wallet.js";
+import { buildAmpersendClient } from "./ampersend.js";
 
 export interface Quote {
   amountAtomic: string;
@@ -121,7 +122,9 @@ function decodeReceiptHeader(header: string | null, fallbackUsd: number): Receip
 export class PaymentEngine {
   readonly cfg: Config;
   private account?: ReturnType<typeof privateKeyToAccount>;
+  private addressOverride?: Address;
   private payFetch?: (input: any, init?: any) => Promise<Response>;
+  private ampersendInit?: Promise<void>;
   // `any` sidesteps viem's chain-specific (OP-stack) PublicClient generics;
   // we only call readContract / getBalance, which are universally present.
   private pub: any;
@@ -129,7 +132,12 @@ export class PaymentEngine {
   constructor(cfg: Config) {
     this.cfg = cfg;
     this.pub = createPublicClient({ chain: chainFor(cfg), transport: http(cfg.rpcUrl) });
-    if (cfg.privateKey && cfg.paymentMode !== "harness") {
+    if (cfg.paymentMode === "harness") return;
+    if (cfg.ampersend) {
+      // Managed (Ampersend) wallet: address is known up front; the paying client
+      // is built lazily on first paid call (dynamic import of the optional SDK).
+      this.addressOverride = cfg.ampersendSmartAccount;
+    } else if (cfg.privateKey) {
       this.account = privateKeyToAccount(cfg.privateKey);
       // x402 v2: signer goes into the `exact` EVM scheme registered on the client.
       // The account only ever signs an EIP-712 authorization off-chain; the
@@ -139,26 +147,42 @@ export class PaymentEngine {
     }
   }
 
+  /** Lazily build the Ampersend paying client on first paid call (no-op for BYO/harness). */
+  private async ensurePayFetch(): Promise<void> {
+    if (this.payFetch || this.cfg.paymentMode === "harness" || !this.cfg.ampersend) return;
+    if (!this.ampersendInit) {
+      this.ampersendInit = (async () => {
+        const client = await buildAmpersendClient(this.cfg);
+        this.payFetch = wrapFetchWithPayment(globalThis.fetch as any, client as any) as any;
+      })();
+    }
+    await this.ampersendInit;
+  }
+
   get address(): Address | undefined {
-    return this.account?.address;
+    return this.account?.address ?? this.addressOverride;
   }
   get canPay(): boolean {
+    if (this.cfg.paymentMode === "harness") return false;
+    if (this.cfg.ampersend) return !!(this.cfg.ampersendSmartAccount && this.cfg.ampersendSessionKey);
     return !!this.payFetch;
   }
 
   async usdcBalance(): Promise<bigint | undefined> {
-    if (!this.account) return undefined;
+    const addr = this.address;
+    if (!addr) return undefined;
     return (await this.pub.readContract({
       address: this.cfg.usdc,
       abi: erc20Abi,
       functionName: "balanceOf",
-      args: [this.account.address],
+      args: [addr],
     })) as bigint;
   }
 
   async ethBalance(): Promise<bigint | undefined> {
-    if (!this.account) return undefined;
-    return this.pub.getBalance({ address: this.account.address });
+    const addr = this.address;
+    if (!addr) return undefined;
+    return this.pub.getBalance({ address: addr });
   }
 
   /** Preflight: price a request via its 402 challenge without paying. Returns
@@ -217,20 +241,38 @@ export class PaymentEngine {
 
     if (usd > this.cfg.maxUsdPerQuery) throw new SpendCapError(usd, this.cfg.maxUsdPerQuery);
 
+    // Build the Ampersend client on demand (no-op for BYO/harness).
+    await this.ensurePayFetch();
+
     if (!this.payFetch) {
       // Harness-pays mode: hand the quote back for a wallet-equipped harness.
       return { data: null, paid: false, status: 402, quote, needsHarnessPayment: true };
     }
 
-    const bal = await this.usdcBalance().catch(() => undefined);
-    if (bal !== undefined && bal < atomic) {
-      throw new InsufficientFundsError(
-        `Need ${usd.toFixed(4)} USDC for this query but the wallet holds ${Number(formatUnits(bal, 6)).toFixed(4)} USDC.\n\n` +
-          fundingGuidance(this.address, this.cfg),
-      );
+    // BYO: preflight balance so we fail with a fund-wallet message, not a revert.
+    // Ampersend manages funding + limits itself, so skip the local balance gate.
+    if (!this.cfg.ampersend) {
+      const bal = await this.usdcBalance().catch(() => undefined);
+      if (bal !== undefined && bal < atomic) {
+        throw new InsufficientFundsError(
+          `Need ${usd.toFixed(4)} USDC for this query but the wallet holds ${Number(formatUnits(bal, 6)).toFixed(4)} USDC.\n\n` +
+            fundingGuidance(this.address, this.cfg),
+        );
+      }
     }
 
-    const res = await this.payFetch(url, init);
+    let res: Response;
+    try {
+      res = await this.payFetch(url, init);
+    } catch (e) {
+      const m = e instanceof Error ? e.message : String(e);
+      if (this.cfg.ampersend && /declin|policy|limit|unauthor|insufficient/i.test(m)) {
+        throw new Error(
+          `Ampersend declined this payment (spend policy or balance — check your Ampersend dashboard): ${m}`,
+        );
+      }
+      throw e;
+    }
     const receipt = decodeReceiptHeader(
       res.headers.get("x-payment-response") ?? res.headers.get("payment-response"),
       usd,
