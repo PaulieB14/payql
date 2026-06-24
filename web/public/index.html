@@ -7,9 +7,11 @@
 <style>
   :root { --bg:#0b1020; --panel:#131a2e; --line:#243049; --txt:#e6ebf5; --mut:#8a97b3; --acc:#5b8cff; --ok:#3ecf8e; --warn:#f5c451; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  body { margin:0; background:radial-gradient(900px 520px at 50% -8%, #18234a 0%, var(--bg) 55%); color:var(--txt); font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; min-height:100vh; }
   .wrap { max-width:780px; margin:0 auto; padding:26px 18px 130px; }
-  header h1 { font-size:22px; margin:0 0 4px; }
+  header h1 { font-size:26px; margin:0 0 4px; font-weight:800; letter-spacing:-.01em; background:linear-gradient(90deg,#7aa2ff,#3ecf8e); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .subline { color:var(--mut); font-size:12px; border-top:1px solid var(--line); padding-top:9px; margin-top:2px; }
+  .subline b { color:#aab6d4; font-weight:600; }
   header p { color:var(--mut); margin:0 0 12px; }
   .note { font-size:12.5px; background:rgba(91,140,255,.08); border:1px solid rgba(91,140,255,.28); padding:9px 12px; border-radius:9px; margin:10px 0 4px; }
   .chat { display:flex; flex-direction:column; gap:14px; margin-top:8px; }
@@ -40,6 +42,7 @@
   <header>
     <h1>PayQL Playground 💸</h1>
     <p>Ask a question → see the <b>exact subgraph + GraphQL query</b> that answers it on The Graph, <b>free</b>. Want the results? <b>Run it for $0.01</b> with your own wallet.</p>
+    <div class="subline"><b>10 protocols</b> · live on-chain data · pay-per-query in <b>USDC on Base</b> · gasless · no API key</div>
   </header>
   <div class="note">You only pay if you choose to run a query — and it's a one-time <b>exact $0.01</b> signature (EIP-3009), <b>never a token approval</b>, so this site can't move more than that penny or drain your wallet. The subgraph + query are always free to copy and run yourself.</div>
   <div class="chat" id="chat">
