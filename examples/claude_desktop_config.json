@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "payql": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/payql/dist/index.js"],
+      "env": {
+        "PAYQL_NETWORK": "base",
+        "PAYQL_PAYMENT_MODE": "wallet",
+        "PAYQL_PRIVATE_KEY": "0xYOUR_BASE_WALLET_PRIVATE_KEY",
+        "PAYQL_MAX_USD_PER_QUERY": "0.10"
+      }
+    }
+  }
+}

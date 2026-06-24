@@ -1,0 +1,51 @@
+{
+  "name": "payql",
+  "version": "0.1.0",
+  "description": "MCP server that discovers and queries The Graph's subgraphs, paying per query in USDC over x402 — gasless, keyless, bring-your-own-wallet. Lets any AI agent get live on-chain data on demand.",
+  "type": "module",
+  "bin": {
+    "payql": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    ".env.example"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "x402",
+    "thegraph",
+    "subgraph",
+    "graphql",
+    "usdc",
+    "base",
+    "agents",
+    "ai",
+    "payments",
+    "onchain"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@x402/evm": "^2.16.0",
+    "@x402/fetch": "^2.16.0",
+    "viem": "^2.21.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
