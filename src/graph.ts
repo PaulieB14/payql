@@ -38,7 +38,7 @@ const SEARCH_QUERY = `query PayqlSearch($text: String!, $first: Int!) {
 }`;
 
 // Turn a free-text query into a tsquery with prefix matching: "uniswap v3" -> "uniswap:* & v3:*"
-function toFulltext(q: string): string {
+export function toFulltext(q: string): string {
   const tokens = q
     .trim()
     .toLowerCase()
@@ -60,7 +60,7 @@ export interface SubgraphHit {
   queryUrl: string | null;
 }
 
-function weiToGRT(v: string | null | undefined): number | null {
+export function weiToGRT(v: string | null | undefined): number | null {
   if (v == null) return null;
   const n = Number(v);
   return Number.isFinite(n) ? n / 1e18 : null;

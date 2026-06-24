@@ -29,15 +29,17 @@ Discovery is ranked by on-chain curation signal (a popularity proxy) so you get 
 
 ## Tools
 
-| Tool | Paid? | What it does |
-|------|-------|--------------|
-| `search_subgraphs` | tiny | Find live subgraphs by keyword/protocol, ranked by curation signal. Returns `subgraph_id`, `ipfsHash`, signal, query fees, query URL. |
-| `get_payment_info` | free | Preflight a subgraph: returns the USDC price, `payTo`, network and whether it's within your cap — **without paying**. |
-| `query_subgraph` | yes | Run a GraphQL query, paying via x402. Returns the data + a payment receipt. Enforces the spend cap; returns a fund-wallet message if balance is short. |
-| `get_subgraph_schema` | yes | List a subgraph's root queryable entities (GraphQL introspection). |
-| `wallet_status` | free | Payment mode, wallet address, USDC/ETH balance, spend cap, funding instructions. Never reveals the key. |
+| Tool | Cost | What it does |
+|------|------|--------------|
+| `search_subgraphs` | ~$0.01 (x402) † | Find live subgraphs by keyword/protocol, ranked by curation signal. Returns `subgraph_id`, `ipfsHash`, signal, query fees, query URL. |
+| `get_payment_info` | **free** | Preflight a subgraph: returns the USDC price, `payTo`, network and whether it's within your cap — **without paying**. |
+| `query_subgraph` | ~$0.01 (x402) | Run a GraphQL query, paying via x402. Returns the data + a payment receipt. Enforces the spend cap; returns a fund-wallet message if balance is short. |
+| `get_subgraph_schema` | ~$0.01 (x402) | List a subgraph's root queryable entities (GraphQL introspection of the target subgraph). |
+| `wallet_status` | **free** | Payment mode, wallet address, USDC/ETH balance, spend cap, funding instructions. Never reveals the key. |
 
-> By default `search_subgraphs` runs a tiny *paid* x402 query against The Graph's network subgraph; point `PAYQL_REGISTRY_URL` at a free GraphQL source (e.g. your own curated registry) to make it free. `get_subgraph_schema` introspects the target subgraph directly, so it's always a paid query.
+**x402 is the only payment — there are no API keys, subscriptions, or platform fees.** A `~$0.01` row just means that call runs a GraphQL query through the gateway, billed as the same per-query x402 micropayment; `get_payment_info` and `wallet_status` don't touch the gateway, so they're free.
+
+† `search_subgraphs` becomes **free** when `PAYQL_REGISTRY_URL` points at a free discovery source (e.g. your own subgraph registry). `get_subgraph_schema` introspects through the gateway, so it's always an x402 query.
 
 ---
 

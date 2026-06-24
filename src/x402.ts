@@ -84,7 +84,7 @@ export function pickAccept(accepts: any[], cfg: Config): any | undefined {
 // The Graph's gateway delivers the x402 challenge as a base64-JSON
 // `payment-required` response header; the x402 spec also allows it in the JSON
 // body. Read the header first, then fall back to the body.
-async function paymentRequiredFrom(res: Response): Promise<any> {
+export async function paymentRequiredFrom(res: Response): Promise<any> {
   const h = res.headers.get("payment-required") ?? res.headers.get("x-payment-required");
   if (h) {
     try {
@@ -102,7 +102,7 @@ async function paymentRequiredFrom(res: Response): Promise<any> {
 }
 
 // The x402 settlement receipt rides back base64-encoded in X-PAYMENT-RESPONSE.
-function decodeReceiptHeader(header: string | null, fallbackUsd: number): Receipt | undefined {
+export function decodeReceiptHeader(header: string | null, fallbackUsd: number): Receipt | undefined {
   if (!header) return undefined;
   try {
     const json = JSON.parse(Buffer.from(header, "base64").toString("utf8"));
