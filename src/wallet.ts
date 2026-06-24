@@ -15,8 +15,9 @@ export function fundingGuidance(address: string | undefined, cfg: Config): strin
     `x402 payments are GASLESS (EIP-3009 transferWithAuthorization): you need USDC only — no ETH.`,
     ``,
     `Ways to fund:`,
+    `  - Easiest: use Ampersend managed mode (PAYQL_WALLET_PROVIDER=ampersend) — auto-top-ups + spend caps, no manual funding.`,
     `  - Wallet-enabled harness: run your agent's "fund"/onramp skill and deposit USDC to the address above.`,
-    `  - Card -> USDC on Base via a Coinbase/CDP onramp, withdrawing to the address above.`,
+    `  - Buy USDC on Base via any fiat onramp, withdraw to the address above.`,
     `  - Already hold funds on Base: send USDC to the address (or swap ETH->USDC, then send).`,
     `  - Cross-chain: bridge USDC to Base via Circle CCTP.`,
   ];

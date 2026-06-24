@@ -214,8 +214,9 @@ Now every paid query is authorized against your Ampersend policy **before** it's
 
 x402 payments are gasless, so the floor to *use* PayQL is **USDC on Base**. To fund the wallet shown by `wallet_status`:
 
+- **Easiest — Ampersend managed wallet.** Use `managed` mode ([Using Ampersend](#using-ampersend-optional)): Ampersend creates the wallet, enforces spend limits, and **auto-tops-up** USDC — no separate funding step.
 - In a wallet-enabled harness, run its **fund/onramp skill** and deposit USDC.
-- Card → USDC on Base via a **Coinbase/CDP onramp**, withdrawing to the address.
+- Buy **USDC on Base via any fiat onramp**, withdrawing to the address.
 - Already on Base? **Send USDC** to the address (or swap ETH→USDC, then send).
 - Cross-chain? **Bridge USDC to Base via Circle CCTP.**
 
