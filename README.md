@@ -134,15 +134,7 @@ A typical agent loop is **discover → price → query**. Tool calls take JSON a
 
 ## Install
 
-### 1. Build it
-
-```bash
-git clone <this repo> && cd payql
-npm install
-npm run build
-```
-
-### 2. Add it to your harness
+PayQL is on [npm](https://www.npmjs.com/package/payql) — no clone or build required. Add it to your harness and `npx` fetches it on first run.
 
 **Claude Desktop** — add to `claude_desktop_config.json`:
 
@@ -150,8 +142,8 @@ npm run build
 {
   "mcpServers": {
     "payql": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/payql/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "payql"],
       "env": {
         "PAYQL_NETWORK": "base",
         "PAYQL_PRIVATE_KEY": "0xYOUR_BASE_WALLET_KEY",
@@ -169,12 +161,12 @@ claude mcp add payql \
   -e PAYQL_NETWORK=base \
   -e PAYQL_PRIVATE_KEY=0xYOUR_BASE_WALLET_KEY \
   -e PAYQL_MAX_USD_PER_QUERY=0.01 \
-  -- node /ABSOLUTE/PATH/payql/dist/index.js
+  -- npx -y payql
 ```
 
 **Cursor** — same block as Claude Desktop in `~/.cursor/mcp.json`.
 
-> Once published to npm you can swap `"command": "node", "args": ["…/dist/index.js"]` for `"command": "npx", "args": ["-y", "payql"]`.
+> **Run from source instead?** Clone, `npm install`, `npm run build`, then point the harness at the local build with `"command": "node", "args": ["/ABSOLUTE/PATH/payql/dist/index.js"]`.
 
 ---
 
