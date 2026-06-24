@@ -21,6 +21,9 @@ app.post("/api/query", async (req, res) => {
   try {
     const ex = EXAMPLES.find((e) => e.id === (req.body || {}).exampleId);
     if (!ex) return res.status(400).json({ error: "unknown example" });
+    if (!process.env.DEMO_PRIVATE_KEY) {
+      return res.status(503).json({ error: "The demo wallet isn't funded right now — switch to ‘Pay with your wallet’." });
+    }
     if (count >= MAX) {
       return res.status(429).json({ error: "Demo query limit reached for now. Run PayQL with your own wallet to keep going: npx -y payql" });
     }

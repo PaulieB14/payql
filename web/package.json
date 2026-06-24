@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Try x402-paid queries on The Graph in the browser — discover → 402 → pay $0.01 → data, transparently.",
   "scripts": {
-    "start": "node server.js"
+    "prestart": "npm run build",
+    "start": "node server.js",
+    "build": "esbuild src/browser.js --bundle --format=esm --outfile=public/bundle.js --inject:./buffer-shim.js --define:global=globalThis"
   },
   "engines": { "node": ">=18" },
   "dependencies": {
@@ -13,5 +15,9 @@
     "@x402/fetch": "^2.16.0",
     "express": "^4.19.2",
     "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "buffer": "^6.0.3",
+    "esbuild": "^0.23.0"
   }
 }
