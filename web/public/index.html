@@ -73,15 +73,16 @@ function add(cls, html) {
 // Free preview card: subgraph + query + price, with a pay-to-run button.
 function previewCard(p) {
   const id = "run-" + ++uid;
+  const explorer = `https://thegraph.com/explorer/subgraphs/${p.subgraphId}?view=Query&chain=arbitrum-one`;
   const html = `
-    <div class="row"><span class="ic">🔍</span><span><b>${esc(p.protocol)}</b> subgraph
-      <div class="sub">id ${short(p.subgraphId)} · <a href="${p.gatewayUrl}" target="_blank" rel="noopener">gateway ↗</a></div></span></div>
+    <div class="row"><span class="ic">🔍</span><span><b>${esc(p.protocol)}</b> subgraph · <a href="${explorer}" target="_blank" rel="noopener">view on The Graph ↗</a>
+      <div class="sub" style="word-break:break-all">${esc(p.subgraphId)}</div></span></div>
     <div class="row"><span class="ic">🔒</span><span>Price to run: <b>${usd(p.priceUsd)}</b> USDC on Base · pay-per-query</span></div>
     <div class="qlabel">GraphQL query (free to copy + run yourself)</div>
     <pre>${esc(p.query)}</pre>
     <div class="safe">▶ Running signs a one-time <b>${usd(p.priceUsd)}</b> payment from your wallet (no approval — can't be drained).</div>
     <button class="run" id="${id}">▶ Run &amp; pay ${usd(p.priceUsd)} with your wallet</button>
-    <div class="self">or run it yourself: <code class="k">npx -y payql</code></div>`;
+    <div class="self">run it yourself: <code class="k">npx -y payql</code> · <a href="${p.gatewayUrl}" target="_blank" rel="noopener">x402 endpoint ↗</a></div>`;
   const card = add("bot", html);
   card.querySelector("#" + id).onclick = (e) => doPay(p, e.target);
   return card;
