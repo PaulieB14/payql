@@ -122,7 +122,8 @@ function previewCard(p) {
     <pre>${esc(p.query)}</pre>
     <div class="safe">▶ Running signs a one-time <b>${usd(p.priceUsd)}</b> payment from your wallet (no approval — can't be drained).</div>
     <button class="run" id="${id}">▶ Run &amp; pay ${usd(p.priceUsd)} with your wallet</button>
-    <div class="self">run it yourself: <code class="k">npx -y payql</code> · <a href="${p.gatewayUrl}" target="_blank" rel="noopener">x402 endpoint ↗</a></div>`;
+    <div class="self">Run it yourself: <code class="k">npx -y payql</code></div>
+    <div class="self" style="margin-top:5px">x402 endpoint — <b>POST</b> here (returns a 402 challenge, not browsable): <code class="k">${esc(p.gatewayUrl)}</code></div>`;
   const card = add("bot", html);
   card.querySelector("#" + id).onclick = (e) => doPay(p, e.target);
   return card;
