@@ -2,46 +2,58 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>PayQL Playground — try x402 on The Graph</title>
 <style>
-  :root { --bg:#0b1020; --panel:#131a2e; --line:#243049; --txt:#e6ebf5; --mut:#8a97b3; --acc:#5b8cff; --ok:#3ecf8e; --warn:#f5c451; }
+  :root { --bg:#0b1020; --panel:#131a2e; --line:#243049; --txt:#e6ebf5; --mut:#8a97b3; --acc:#5b8cff; --ok:#3ecf8e; --warn:#f5c451; --dock-h:200px; }
   * { box-sizing:border-box; }
-  body { margin:0; background:radial-gradient(900px 520px at 50% -8%, #18234a 0%, var(--bg) 55%); color:var(--txt); font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; min-height:100vh; }
-  .wrap { max-width:780px; margin:0 auto; padding:26px 18px 188px; }
+  html, body { margin:0; }
+  body { background:radial-gradient(900px 520px at 50% -8%, #18234a 0%, var(--bg) 55%) no-repeat var(--bg); color:var(--txt); font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; min-height:100svh; overflow-x:hidden; -webkit-text-size-adjust:100%; }
+  .wrap { max-width:760px; margin:0 auto; padding:26px 18px calc(var(--dock-h) + 26px); }
   header h1 { font-size:26px; margin:0 0 4px; font-weight:800; letter-spacing:-.01em; background:linear-gradient(90deg,#7aa2ff,#3ecf8e); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .subline { color:var(--mut); font-size:12px; border-top:1px solid var(--line); padding-top:9px; margin-top:2px; }
-  .subline b { color:#aab6d4; font-weight:600; }
   header p { color:var(--mut); margin:0 0 12px; }
+  .subline { color:var(--mut); font-size:12px; border-top:1px solid var(--line); padding-top:9px; }
+  .subline b { color:#aab6d4; font-weight:600; }
   .note { font-size:12.5px; background:rgba(91,140,255,.08); border:1px solid rgba(91,140,255,.28); padding:9px 12px; border-radius:9px; margin:10px 0 4px; }
-  .chat { display:flex; flex-direction:column; gap:14px; margin-top:8px; }
-  .msg { padding:12px 14px; border-radius:12px; max-width:94%; }
-  .user { align-self:flex-end; background:var(--acc); color:#fff; }
-  .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); width:94%; }
-  .row { display:flex; gap:9px; align-items:flex-start; font-size:13.5px; margin-bottom:5px; }
+  .chat { display:flex; flex-direction:column; gap:13px; margin-top:12px; }
+  .msg { padding:12px 14px; border-radius:13px; max-width:100%; overflow-wrap:anywhere; }
+  .user { align-self:flex-end; max-width:88%; background:var(--acc); color:#fff; border-bottom-right-radius:4px; }
+  .bot { align-self:stretch; background:var(--panel); border:1px solid var(--line); border-bottom-left-radius:4px; }
+  .row { display:flex; gap:9px; align-items:flex-start; font-size:13.5px; margin-bottom:6px; }
+  .row > span:last-child { min-width:0; }
   .ic { width:18px; flex:0 0 18px; text-align:center; }
-  .sub { color:var(--mut); font-size:12px; }
-  .qlabel { color:var(--mut); font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; margin:9px 0 4px; }
+  .sub { color:var(--mut); font-size:12px; overflow-wrap:anywhere; }
+  .qlabel { color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin:10px 0 5px; }
   a { color:var(--acc); text-decoration:none; } a:hover { text-decoration:underline; }
-  pre { background:#0a0f1e; border:1px solid var(--line); border-radius:9px; padding:11px; overflow:auto; font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; color:#cfe3ff; margin:0; }
+  pre { background:#0a0f1e; border:1px solid var(--line); border-radius:9px; padding:11px; overflow-x:auto; -webkit-overflow-scrolling:touch; font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; color:#cfe3ff; margin:0; max-width:100%; }
   .safe { color:var(--ok); font-size:12.5px; margin:11px 0 9px; }
-  button.run { background:var(--acc); color:#fff; border:0; padding:10px 15px; border-radius:9px; cursor:pointer; font-size:14px; font-weight:600; }
+  button.run { background:var(--acc); color:#fff; border:0; padding:11px 16px; border-radius:9px; cursor:pointer; font-size:14px; font-weight:600; }
   button.run[disabled] { opacity:.55; cursor:default; }
-  .self { color:var(--mut); font-size:12px; margin-top:9px; }
-  .dock { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(180deg,transparent,var(--bg) 24%); padding:24px 18px 16px; }
-  .dock-inner { max-width:780px; margin:0 auto; }
+  .self { color:var(--mut); font-size:12px; margin-top:10px; overflow-wrap:anywhere; }
+  .dock { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(180deg,transparent,var(--bg) 22%); padding:22px 18px calc(14px + env(safe-area-inset-bottom)); }
+  .dock-inner { max-width:760px; margin:0 auto; }
   .ask { display:flex; gap:8px; }
-  .ask input { flex:1; background:var(--panel); border:1px solid var(--line); color:var(--txt); padding:12px 16px; border-radius:999px; font-size:14px; outline:none; }
+  .ask input { flex:1; min-width:0; background:var(--panel); border:1px solid var(--line); color:var(--txt); padding:12px 16px; border-radius:999px; font-size:16px; outline:none; }
   .ask input:focus { border-color:var(--acc); }
-  .ask button { background:var(--acc); color:#fff; border:0; padding:0 20px; border-radius:999px; cursor:pointer; font-size:14px; font-weight:600; }
+  .ask button { flex:0 0 auto; background:var(--acc); color:#fff; border:0; padding:0 20px; border-radius:999px; cursor:pointer; font-size:15px; font-weight:600; }
   .ask button[disabled] { opacity:.55; cursor:default; }
   .or { color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin:11px 2px 7px; }
-  .chips { display:flex; flex-wrap:wrap; gap:9px; max-height:96px; overflow:auto; }
-  .chip { background:var(--panel); border:1px solid var(--line); color:var(--txt); padding:8px 13px; border-radius:999px; cursor:pointer; font-size:13px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; max-height:84px; overflow-y:auto; }
+  .chip { background:var(--panel); border:1px solid var(--line); color:var(--txt); padding:8px 13px; border-radius:999px; cursor:pointer; font-size:13px; white-space:nowrap; }
   .chip:hover { border-color:var(--acc); } .chip[disabled] { opacity:.5; cursor:default; }
   .muted { color:var(--mut); } .ok { color:var(--ok); } .warn { color:var(--warn); }
-  code.k { background:#0a0f1e; border:1px solid var(--line); border-radius:5px; padding:1px 5px; font:12px ui-monospace,monospace; }
-  footer { margin-top:24px; color:var(--mut); font-size:12.5px; }
+  code.k { background:#0a0f1e; border:1px solid var(--line); border-radius:5px; padding:1px 5px; font:12px ui-monospace,monospace; overflow-wrap:anywhere; }
+  footer { margin-top:22px; color:var(--mut); font-size:12.5px; }
+  @media (max-width:600px) {
+    .wrap { padding:20px 14px calc(var(--dock-h) + 20px); }
+    header h1 { font-size:22px; }
+    header p { font-size:14px; margin-bottom:10px; }
+    .msg { padding:11px 12px; }
+    button.run { width:100%; }
+    .dock { padding:16px 14px calc(12px + env(safe-area-inset-bottom)); }
+    .chips { max-height:70px; }
+    pre { font-size:12px; }
+  }
 </style>
 </head>
 <body>
@@ -74,11 +86,18 @@ const chat = document.getElementById("chat");
 const chips = document.getElementById("chips");
 const askInput = document.getElementById("ask");
 const sendBtn = document.getElementById("send");
+const dockEl = document.querySelector(".dock");
 const short = (s, n = 6) => (s && s.length > 2 * n ? s.slice(0, n) + "…" + s.slice(-4) : s);
 const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 const usd = (n) => "$" + Number(n ?? 0.01).toFixed(2);
 let wallet = null;       // lazily-loaded bundle.js (BYO payment)
 let uid = 0;
+
+// Keep the chat clear of the fixed dock on any screen size.
+const fitDock = () => document.documentElement.style.setProperty("--dock-h", dockEl.offsetHeight + "px");
+fitDock();
+window.addEventListener("resize", fitDock);
+if (window.ResizeObserver) new ResizeObserver(fitDock).observe(dockEl);
 
 function add(cls, html) {
   const d = document.createElement("div");
@@ -96,7 +115,7 @@ function previewCard(p) {
   const note = p.note ? `<div class="row"><span class="ic">⚠️</span><span class="sub">${esc(p.note)}</span></div>` : "";
   const html = `
     <div class="row"><span class="ic">🔍</span><span><b>${esc(p.protocol)}</b> subgraph · <a href="${explorer}" target="_blank" rel="noopener">view on The Graph ↗</a>
-      <div class="sub" style="word-break:break-all">${esc(p.subgraphId)}</div></span></div>
+      <div class="sub">${esc(p.subgraphId)}</div></span></div>
     ${note}
     <div class="row"><span class="ic">🔒</span><span>Price to run: <b>${usd(p.priceUsd)}</b> USDC on Base · pay-per-query</span></div>
     <div class="qlabel">GraphQL query (free to copy + run yourself)</div>
@@ -175,6 +194,7 @@ askInput.addEventListener("keydown", (e) => { if (e.key === "Enter") ask(); });
       chips.appendChild(b);
     });
   } catch { chips.innerHTML = '<span class="muted">Could not load examples.</span>'; }
+  fitDock();
 })();
 </script>
 </body>
