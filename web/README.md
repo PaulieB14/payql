@@ -4,12 +4,12 @@ A tiny web demo that lets anyone **try x402-paid queries on The Graph** in the b
 
 > ask → **discover** the subgraph → **402** ($0.01) → **pay** (gasless) → **live data + tx hash**
 
-No LLM — guided prompts. Two modes:
+No LLM — guided prompts. **Free preview, pay-to-run:**
 
-- **👀 Watch it work** — the visitor does nothing; a small server-side demo wallet pays each ~$0.01 query. Lowest-friction way to *see* x402-on-The-Graph. (Optional — needs `DEMO_PRIVATE_KEY`.)
-- **🔑 Pay with your wallet** — the visitor connects an injected wallet and pays from their own funds, entirely in-browser. Each payment is a single EIP-3009 signature for an **exact $0.01** — never a token approval/allowance, so the site can't drain anything. (No server wallet needed.)
+- Pick a question → see the exact **subgraph + GraphQL query + live price** in the chat, **free** (the price is read from the gateway's *unpaid* 402, so it costs nothing).
+- **Run it** → connect an injected wallet and pay the **$0.01 yourself**, in-browser. Each payment is a single EIP-3009 signature for an **exact $0.01** — never a token approval/allowance, so the site can't drain anything. Results appear. The hub never holds funds or pays for anyone.
 
-It runs the exact flow that [`npx -y payql`](https://github.com/PaulieB14/payql) runs inside an agent.
+It runs the exact flow that [`npx -y payql`](https://github.com/PaulieB14/payql) runs inside an agent. No server wallet required.
 
 ## Run
 

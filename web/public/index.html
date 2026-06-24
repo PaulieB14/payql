@@ -8,29 +8,26 @@
   :root { --bg:#0b1020; --panel:#131a2e; --line:#243049; --txt:#e6ebf5; --mut:#8a97b3; --acc:#5b8cff; --ok:#3ecf8e; --warn:#f5c451; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-  .wrap { max-width:760px; margin:0 auto; padding:26px 18px 130px; }
+  .wrap { max-width:780px; margin:0 auto; padding:26px 18px 130px; }
   header h1 { font-size:22px; margin:0 0 4px; }
-  header p { color:var(--mut); margin:0 0 14px; }
-  .modes { display:flex; gap:8px; margin:6px 0 4px; }
-  .mode { flex:1; text-align:center; background:var(--panel); border:1px solid var(--line); color:var(--mut); padding:9px; border-radius:9px; cursor:pointer; font-size:13.5px; }
-  .mode.active { color:#fff; border-color:var(--acc); background:#172240; box-shadow:inset 0 0 0 1px var(--acc); }
-  .bar { background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:11px 13px; margin:10px 0; font-size:13px; }
-  .bar.hide { display:none; }
-  .safe { color:var(--ok); }
-  button.connect { background:var(--acc); color:#fff; border:0; padding:9px 15px; border-radius:8px; cursor:pointer; font-size:13.5px; margin-top:8px; }
-  .addr { color:var(--ok); font:12.5px ui-monospace,monospace; }
+  header p { color:var(--mut); margin:0 0 12px; }
+  .note { font-size:12.5px; background:rgba(91,140,255,.08); border:1px solid rgba(91,140,255,.28); padding:9px 12px; border-radius:9px; margin:10px 0 4px; }
   .chat { display:flex; flex-direction:column; gap:14px; margin-top:8px; }
-  .msg { padding:12px 14px; border-radius:12px; max-width:92%; }
+  .msg { padding:12px 14px; border-radius:12px; max-width:94%; }
   .user { align-self:flex-end; background:var(--acc); color:#fff; }
-  .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); width:92%; }
-  .steps { list-style:none; margin:0 0 10px; padding:0; display:flex; flex-direction:column; gap:7px; }
-  .steps li { display:flex; gap:9px; align-items:flex-start; font-size:13.5px; }
+  .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); width:94%; }
+  .row { display:flex; gap:9px; align-items:flex-start; font-size:13.5px; margin-bottom:5px; }
   .ic { width:18px; flex:0 0 18px; text-align:center; }
-  .steps .sub { color:var(--mut); font-size:12px; }
+  .sub { color:var(--mut); font-size:12px; }
+  .qlabel { color:var(--mut); font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; margin:9px 0 4px; }
   a { color:var(--acc); text-decoration:none; } a:hover { text-decoration:underline; }
-  pre { background:#0a0f1e; border:1px solid var(--line); border-radius:9px; padding:11px; overflow:auto; font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; color:#cfe3ff; margin:0; }
+  pre { background:#0a0f1e; border:1px solid var(--line); border-radius:9px; padding:11px; overflow:auto; font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; color:#cfe3ff; margin:0; }
+  .safe { color:var(--ok); font-size:12.5px; margin:11px 0 9px; }
+  button.run { background:var(--acc); color:#fff; border:0; padding:10px 15px; border-radius:9px; cursor:pointer; font-size:14px; font-weight:600; }
+  button.run[disabled] { opacity:.55; cursor:default; }
+  .self { color:var(--mut); font-size:12px; margin-top:9px; }
   .chips { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(180deg,transparent,var(--bg) 26%); padding:22px 18px 18px; }
-  .chips-inner { max-width:760px; margin:0 auto; display:flex; flex-wrap:wrap; gap:9px; }
+  .chips-inner { max-width:780px; margin:0 auto; display:flex; flex-wrap:wrap; gap:9px; }
   .chip { background:var(--panel); border:1px solid var(--line); color:var(--txt); padding:9px 13px; border-radius:999px; cursor:pointer; font-size:13.5px; }
   .chip:hover { border-color:var(--acc); } .chip[disabled] { opacity:.5; cursor:default; }
   .muted { color:var(--mut); } .ok { color:var(--ok); } .warn { color:var(--warn); }
@@ -42,40 +39,27 @@
 <div class="wrap">
   <header>
     <h1>PayQL Playground 💸</h1>
-    <p>Pick a question → watch an agent <b>discover</b> the subgraph, hit a <b>402</b>, <b>pay $0.01</b>, and get <b>live on-chain data</b> from The Graph.</p>
+    <p>Ask a question → see the <b>exact subgraph + GraphQL query</b> that answers it on The Graph, <b>free</b>. Want the results? <b>Run it for $0.01</b> with your own wallet.</p>
   </header>
-
-  <div class="modes">
-    <div class="mode active" id="mode-demo" data-mode="demo">👀 Watch it work <span class="muted">(we pay)</span></div>
-    <div class="mode" id="mode-wallet" data-mode="wallet">🔑 Pay with your wallet</div>
-  </div>
-
-  <div class="bar hide" id="walletbar">
-    <div><b>Pay with your own wallet.</b> <span class="safe">Each query is a one-time <b>exact $0.01</b> signature (EIP-3009) — never a token approval or allowance, so this site can't move more than the penny you sign for, and can't drain your wallet.</span></div>
-    <button class="connect" id="connectBtn">Connect Wallet</button>
-    <span class="addr" id="addr"></span>
-  </div>
-
+  <div class="note">You only pay if you choose to run a query — and it's a one-time <b>exact $0.01</b> signature (EIP-3009), <b>never a token approval</b>, so this site can't move more than that penny or drain your wallet. The subgraph + query are always free to copy and run yourself.</div>
   <div class="chat" id="chat">
-    <div class="msg bot muted">Pick a question below ↓</div>
+    <div class="msg bot muted">Pick a question below — I'll show you the subgraph and query for free ↓</div>
   </div>
-
   <footer>
-    Powered by <a href="https://github.com/PaulieB14/payql" target="_blank" rel="noopener">PayQL</a> + The Graph's keyless x402 gateway. Run it in your own agent: <code class="k">npx -y payql</code>
+    Powered by <a href="https://github.com/PaulieB14/payql" target="_blank" rel="noopener">PayQL</a> + The Graph's keyless x402 gateway. Run any of these in your own agent: <code class="k">npx -y payql</code>
   </footer>
 </div>
 
 <div class="chips"><div class="chips-inner" id="chips"></div></div>
 
 <script type="module">
-const GATEWAY = "https://gateway.thegraph.com/api/x402/subgraphs/id/";
 const chat = document.getElementById("chat");
 const chips = document.getElementById("chips");
-const walletbar = document.getElementById("walletbar");
-const addrEl = document.getElementById("addr");
 const short = (s, n = 6) => (s && s.length > 2 * n ? s.slice(0, n) + "…" + s.slice(-4) : s);
-let mode = "demo";
-let wallet = null; // lazily-loaded bundle.js (BYO payment)
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const usd = (n) => "$" + Number(n ?? 0.01).toFixed(2);
+let wallet = null;       // lazily-loaded bundle.js (BYO payment)
+let uid = 0;
 
 function add(cls, html) {
   const d = document.createElement("div");
@@ -85,73 +69,57 @@ function add(cls, html) {
   window.scrollTo(0, document.body.scrollHeight);
   return d;
 }
-function renderResult(r) {
-  const icon = { discover: "🔍", "402": "🔒", paid: "✅" };
-  const steps = r.steps.map((s) => {
-    let sub = "";
-    if (s.step === "discover") sub = `<div class="sub">id ${short(s.subgraphId)} · <a href="${s.url}" target="_blank" rel="noopener">gateway</a></div>`;
-    if (s.step === "402") sub = `<div class="sub">${s.payTo ? "pay to " + short(s.payTo) + " · " : ""}${s.network} · scheme ${s.scheme}</div>`;
-    if (s.step === "paid") sub = `<div class="sub ok">${s.payer ? "from " + short(s.payer) + " · " : ""}${s.basescan ? `tx ${short(s.txHash)} · <a href="${s.basescan}" target="_blank" rel="noopener">basescan ↗</a>` : "(no tx in receipt)"}</div>`;
-    return `<li><span class="ic">${icon[s.step] || "•"}</span><span>${s.text}${sub}</span></li>`;
-  }).join("");
-  const dataBlock = r.errors ? `<pre class="warn">${JSON.stringify(r.errors, null, 2)}</pre>` : `<pre>${JSON.stringify(r.data, null, 2)}</pre>`;
-  return `<ul class="steps">${steps}</ul>${dataBlock}`;
+
+// Free preview card: subgraph + query + price, with a pay-to-run button.
+function previewCard(p) {
+  const id = "run-" + ++uid;
+  const html = `
+    <div class="row"><span class="ic">🔍</span><span><b>${esc(p.protocol)}</b> subgraph
+      <div class="sub">id ${short(p.subgraphId)} · <a href="${p.gatewayUrl}" target="_blank" rel="noopener">gateway ↗</a></div></span></div>
+    <div class="row"><span class="ic">🔒</span><span>Price to run: <b>${usd(p.priceUsd)}</b> USDC on Base · pay-per-query</span></div>
+    <div class="qlabel">GraphQL query (free to copy + run yourself)</div>
+    <pre>${esc(p.query)}</pre>
+    <div class="safe">▶ Running signs a one-time <b>${usd(p.priceUsd)}</b> payment from your wallet (no approval — can't be drained).</div>
+    <button class="run" id="${id}">▶ Run &amp; pay ${usd(p.priceUsd)} with your wallet</button>
+    <div class="self">or run it yourself: <code class="k">npx -y payql</code></div>`;
+  const card = add("bot", html);
+  card.querySelector("#" + id).onclick = (e) => doPay(p, e.target);
+  return card;
 }
 
-// Mode toggle
-document.querySelectorAll(".mode").forEach((m) => {
-  m.onclick = () => {
-    mode = m.dataset.mode;
-    document.querySelectorAll(".mode").forEach((x) => x.classList.toggle("active", x === m));
-    walletbar.classList.toggle("hide", mode !== "wallet");
-  };
-});
-
-// Connect wallet (loads the bundle on demand)
-document.getElementById("connectBtn").onclick = async () => {
+async function doPay(p, btn) {
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = "Connecting / sign in your wallet…";
   try {
     if (!wallet) wallet = await import("./bundle.js");
-    const a = await wallet.connectWallet();
-    addrEl.textContent = "connected: " + short(a);
+    if (!wallet.connectedAddress()) await wallet.connectWallet();
+    btn.textContent = "Paying…";
+    const r = await wallet.payQuery(p.subgraphId, p.query);
+    const paid = `<div class="row"><span class="ic">✅</span><span>Paid ${usd(p.priceUsd)} from ${short(r.payer)}
+      ${r.txHash ? `· tx ${short(r.txHash)} · <a href="https://basescan.org/tx/${r.txHash}" target="_blank" rel="noopener">basescan ↗</a>` : ""}</span></div>`;
+    const data = r.errors ? `<pre class="warn">${esc(JSON.stringify(r.errors, null, 2))}</pre>` : `<pre>${esc(JSON.stringify(r.data, null, 2))}</pre>`;
+    add("bot", paid + data);
+    btn.textContent = "✓ Done — run again?";
+    btn.disabled = false;
   } catch (e) {
-    addrEl.innerHTML = `<span class="warn">${e.message || e}</span>`;
+    add("bot warn", (e && e.message) || String(e));
+    btn.textContent = label;
+    btn.disabled = false;
   }
-};
-
-async function runDemo(ex) {
-  const res = await fetch("/api/query", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ exampleId: ex.id }) });
-  const r = await res.json();
-  if (!res.ok || r.error) return { error: r.error || "error" };
-  return r;
-}
-async function runWallet(ex) {
-  if (!wallet) wallet = await import("./bundle.js");
-  if (!wallet.connectedAddress()) return { error: "Connect your wallet first (button above)." };
-  const r = await wallet.payQuery(ex.subgraphId, ex.query);
-  return {
-    ok: r.ok, data: r.data, errors: r.errors,
-    steps: [
-      { step: "discover", text: `${ex.protocol} subgraph`, subgraphId: ex.subgraphId, url: GATEWAY + ex.subgraphId },
-      { step: "402", text: "Gateway requires payment: $0.01 USDC on Base", network: "eip155:8453", scheme: "exact" },
-      { step: "paid", text: "Paid $0.01 USDC from your wallet — gasless", payer: r.payer, txHash: r.txHash, basescan: r.txHash ? `https://basescan.org/tx/${r.txHash}` : null },
-    ],
-  };
 }
 
 async function run(ex) {
   add("user", ex.label);
-  const pending = add("bot muted", mode === "wallet" ? "Sign the $0.01 payment in your wallet…" : "Running live — discovering → paying the 402 →");
-  chips.querySelectorAll(".chip").forEach((c) => (c.disabled = true));
+  const pending = add("bot muted", "Finding the subgraph + live price…");
   try {
-    const r = mode === "wallet" ? await runWallet(ex) : await runDemo(ex);
+    const p = await (await fetch("/api/preview", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ exampleId: ex.id }) })).json();
     pending.remove();
-    if (r.error) add("bot warn", r.error);
-    else add("bot", renderResult(r));
+    if (p.error) add("bot warn", p.error);
+    else previewCard(p);
   } catch (e) {
     pending.remove();
     add("bot warn", (e && e.message) || String(e));
-  } finally {
-    chips.querySelectorAll(".chip").forEach((c) => (c.disabled = false));
   }
 }
 
