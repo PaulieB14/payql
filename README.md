@@ -184,10 +184,13 @@ You don't have to choose globally — the same build does all three depending on
 
 [Ampersend](https://github.com/edgeandnode/ampersend-sdk) (by Edge & Node) is a control layer for agent payments built on x402: per-transaction / daily / monthly limits, seller allowlists, auto-top-ups, and self-custodied keys. PayQL integrates it as an **opt-in** dependency — it is never installed or loaded unless you choose this mode.
 
-1. **Install the SDK** (only for this mode):
-   ```bash
-   npm i @ampersend_ai/ampersend-sdk
-   ```
+1. **Install the SDK *alongside* PayQL** so the optional import resolves. A bare `npx -y payql` (from [Install](#install)) runs PayQL out of npm's temporary cache, which **can't see an SDK installed separately in your project** — so for managed mode use one of:
+   - **Multi-package npx** (keeps the npx style — both land in the same temp tree):
+     ```jsonc
+     "command": "npx",
+     "args": ["-y", "-p", "payql", "-p", "@ampersend_ai/ampersend-sdk", "payql"]
+     ```
+   - **or a local install** — `npm i payql @ampersend_ai/ampersend-sdk` in a folder, then point the harness at `"command": "node", "args": [".../node_modules/payql/dist/index.js"]`.
 2. **Create an agent + smart account** in Ampersend and set its spend policy ([docs.ampersend.ai](https://docs.ampersend.ai)). You'll get a **smart-account address** and a **session key**.
 3. **Configure PayQL:**
    ```bash
