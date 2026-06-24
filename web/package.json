@@ -1,0 +1,17 @@
+{
+  "name": "payql-playground",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Try x402-paid queries on The Graph in the browser — discover → 402 → pay $0.01 → data, transparently.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@x402/evm": "^2.16.0",
+    "@x402/fetch": "^2.16.0",
+    "express": "^4.19.2",
+    "viem": "^2.21.0"
+  }
+}

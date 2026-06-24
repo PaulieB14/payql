@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PayQL Playground — try x402 on The Graph</title>
+<style>
+  :root { --bg:#0b1020; --panel:#131a2e; --line:#243049; --txt:#e6ebf5; --mut:#8a97b3; --acc:#5b8cff; --ok:#3ecf8e; --warn:#f5c451; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:28px 18px 120px; }
+  header h1 { font-size:22px; margin:0 0 4px; }
+  header p { color:var(--mut); margin:0 0 6px; }
+  .note { color:var(--warn); font-size:12.5px; background:rgba(245,196,81,.08); border:1px solid rgba(245,196,81,.25); padding:8px 11px; border-radius:8px; margin:14px 0; }
+  .chat { display:flex; flex-direction:column; gap:14px; margin-top:10px; }
+  .msg { padding:12px 14px; border-radius:12px; max-width:92%; }
+  .user { align-self:flex-end; background:var(--acc); color:#fff; }
+  .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); width:92%; }
+  .steps { list-style:none; margin:0 0 10px; padding:0; display:flex; flex-direction:column; gap:7px; }
+  .steps li { display:flex; gap:9px; align-items:flex-start; font-size:13.5px; }
+  .ic { width:18px; flex:0 0 18px; text-align:center; }
+  .steps .sub { color:var(--mut); font-size:12px; }
+  a { color:var(--acc); text-decoration:none; } a:hover { text-decoration:underline; }
+  pre { background:#0a0f1e; border:1px solid var(--line); border-radius:9px; padding:11px; overflow:auto; font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; color:#cfe3ff; margin:0; }
+  .chips { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(180deg,transparent,var(--bg) 26%); padding:22px 18px 18px; }
+  .chips-inner { max-width:760px; margin:0 auto; display:flex; flex-wrap:wrap; gap:9px; }
+  .chip { background:var(--panel); border:1px solid var(--line); color:var(--txt); padding:9px 13px; border-radius:999px; cursor:pointer; font-size:13.5px; }
+  .chip:hover { border-color:var(--acc); }
+  .chip[disabled] { opacity:.5; cursor:default; }
+  .muted { color:var(--mut); } .ok { color:var(--ok); } .warn { color:var(--warn); }
+  code.k { background:#0a0f1e; border:1px solid var(--line); border-radius:5px; padding:1px 5px; font:12px ui-monospace,monospace; }
+  footer { margin-top:26px; color:var(--mut); font-size:12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>PayQL Playground 💸</h1>
+    <p>Ask a question → watch an agent <b>discover</b> the right subgraph, hit a <b>402</b>, <b>pay $0.01</b>, and get <b>live on-chain data</b> from The Graph.</p>
+  </header>
+  <div class="note">Each query is a <b>real ~$0.01 USDC payment on Base</b> over <b>x402</b>, paid live by a demo wallet — gasless, no API key. This is the exact loop <code class="k">npx -y payql</code> runs in your own agent.</div>
+  <div class="chat" id="chat">
+    <div class="msg bot muted">Pick a question below to run it live ↓</div>
+  </div>
+  <footer>
+    Powered by <a href="https://github.com/PaulieB14/payql" target="_blank" rel="noopener">PayQL</a> + The Graph's keyless x402 gateway. Want this in your own agent? <code class="k">npx -y payql</code>
+  </footer>
+</div>
+
+<div class="chips"><div class="chips-inner" id="chips"></div></div>
+
+<script>
+const chat = document.getElementById("chat");
+const chips = document.getElementById("chips");
+const short = (s, n = 6) => (s && s.length > 2 * n ? s.slice(0, n) + "…" + s.slice(-4) : s);
+
+function add(cls, html) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.innerHTML = html;
+  chat.appendChild(d);
+  window.scrollTo(0, document.body.scrollHeight);
+  return d;
+}
+
+function renderResult(r) {
+  const icon = { discover: "🔍", "402": "🔒", paid: "✅" };
+  const steps = r.steps.map((s) => {
+    let sub = "";
+    if (s.step === "discover") sub = `<div class="sub">id ${short(s.subgraphId)} · <a href="${s.url}" target="_blank" rel="noopener">gateway</a></div>`;
+    if (s.step === "402") sub = `<div class="sub">pay to ${short(s.payTo)} · ${s.network} · scheme ${s.scheme}</div>`;
+    if (s.step === "paid" && s.basescan) sub = `<div class="sub ok">tx ${short(s.txHash)} · <a href="${s.basescan}" target="_blank" rel="noopener">basescan ↗</a></div>`;
+    return `<li><span class="ic">${icon[s.step] || "•"}</span><span>${s.text}${sub}</span></li>`;
+  }).join("");
+  const dataBlock = r.errors
+    ? `<pre class="warn">${JSON.stringify(r.errors, null, 2)}</pre>`
+    : `<pre>${JSON.stringify(r.data, null, 2)}</pre>`;
+  return `<ul class="steps">${steps}</ul>${dataBlock}`;
+}
+
+async function run(ex, chip) {
+  add("user", ex.label);
+  const pending = add("bot muted", "Running live… discovering subgraph → paying the 402 →");
+  chips.querySelectorAll(".chip").forEach((c) => (c.disabled = true));
+  try {
+    const res = await fetch("/api/query", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ exampleId: ex.id }),
+    });
+    const r = await res.json();
+    pending.remove();
+    if (!res.ok || r.error) add("bot warn", r.error || "Something went wrong.");
+    else add("bot", renderResult(r));
+  } catch (e) {
+    pending.remove();
+    add("bot warn", "Network error: " + e.message);
+  } finally {
+    chips.querySelectorAll(".chip").forEach((c) => (c.disabled = false));
+  }
+}
+
+(async () => {
+  try {
+    const examples = await (await fetch("/api/examples")).json();
+    examples.forEach((ex) => {
+      const b = document.createElement("button");
+      b.className = "chip";
+      b.textContent = ex.label;
+      b.onclick = () => run(ex, b);
+      chips.appendChild(b);
+    });
+  } catch {
+    chips.innerHTML = '<span class="muted">Could not load examples.</span>';
+  }
+})();
+</script>
+</body>
+</html>
