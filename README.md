@@ -2,6 +2,8 @@
 
 **Let any AI agent query The Graph and pay per query in USDC — gasless, keyless, bring-your-own-wallet.**
 
+> **▶ Try it live:** **[payql-playground-production.up.railway.app](https://payql-playground-production.up.railway.app)** — pick a question, see the exact subgraph + GraphQL query for free, then run it for $0.01 with your own wallet. ([playground source](web/))
+
 PayQL is an [MCP](https://modelcontextprotocol.io) server. Drop it into any MCP-capable harness (Claude Desktop, Claude Code, Cursor, …) and your agent can **discover the right subgraph**, **see the price**, and **pull live on-chain data** — paying ~$0.01 in USDC per query over [x402](https://x402.org), with **no API key, no account, and no ETH for gas**.
 
 It's the missing glue between an agent harness (which brings the wallet) and The Graph's data (which is now pay-per-query). The hard part — *which of 40 forks is the live subgraph?* — is solved by ranking discovery on on-chain curation signal.
