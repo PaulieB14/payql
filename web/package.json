@@ -9,8 +9,11 @@
     "start": "node server.js",
     "build": "esbuild src/browser.js --bundle --format=esm --outfile=public/bundle.js --inject:./buffer-shim.js --define:global=globalThis"
   },
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.106.0",
     "@x402/evm": "^2.16.0",
     "@x402/fetch": "^2.16.0",
     "buffer": "^6.0.3",

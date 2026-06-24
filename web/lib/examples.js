@@ -115,6 +115,42 @@ export const EXAMPLES = [
 }`,
   },
   {
+    id: "aave-v3-markets",
+    label: "Largest Aave V3 markets (Polygon)",
+    protocol: "Aave V3 (Polygon)",
+    subgraphId: "6yuf1C49aWEscgk5n9D1DekeG1BCk5Z9imJYJT3sVmAT",
+    query: `{
+  markets(first: 5, orderBy: totalValueLockedUSD, orderDirection: desc) {
+    name
+    totalValueLockedUSD
+  }
+}`,
+  },
+  {
+    id: "lido-staked-eth",
+    label: "Lido staked ETH (TVL)",
+    protocol: "Lido",
+    subgraphId: "F7qb71hWab6SuRL5sf6LQLTpNahmqMsBnnweYHzLGUyG",
+    query: `{
+  pools(first: 5, orderBy: totalValueLockedUSD, orderDirection: desc) {
+    name
+    totalValueLockedUSD
+  }
+}`,
+  },
+  {
+    id: "makerdao-vaults",
+    label: "Largest MakerDAO vaults by TVL",
+    protocol: "MakerDAO",
+    subgraphId: "8sE6rTNkPhzZXZC6c8UQy2ghFTu5PPdGauwUBm4t7HZ1",
+    query: `{
+  markets(first: 5, orderBy: totalValueLockedUSD, orderDirection: desc) {
+    name
+    totalValueLockedUSD
+  }
+}`,
+  },
+  {
     id: "graph-network",
     label: "How many subgraphs are on The Graph?",
     protocol: "The Graph Network",
