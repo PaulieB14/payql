@@ -6,7 +6,10 @@ import { base } from "viem/chains";
 import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
 
-const GATEWAY = "https://gateway.thegraph.com/api/x402/subgraphs/id/";
+// Same-origin proxy (server forwards to The Graph's x402 gateway). Direct cross-origin
+// calls fail because the gateway doesn't CORS-expose the PAYMENT-REQUIRED challenge
+// header, so the browser can't read it. The proxy relays it; the wallet still signs.
+const GATEWAY = "/api/gw/";
 const CAIP2 = "eip155:8453";
 const BASE_HEX = "0x2105"; // 8453
 

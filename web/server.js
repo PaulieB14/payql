@@ -128,5 +128,31 @@ app.post("/api/ask", async (req, res) => {
   }
 });
 
+// Same-origin proxy to The Graph's x402 gateway. The gateway returns the x402
+// challenge in a `PAYMENT-REQUIRED` response header but does NOT expose it via CORS
+// (`Access-Control-Expose-Headers`), so a browser can't read it cross-origin and the
+// @x402 client fails with "Invalid payment required response". Proxying same-origin
+// makes the header readable. The user's wallet still signs the payment — we only
+// relay the signed `X-PAYMENT` to the gateway (non-custodial; no key here).
+app.post("/api/gw/:subgraphId", async (req, res) => {
+  try {
+    const url = `https://gateway.thegraph.com/api/x402/subgraphs/id/${req.params.subgraphId}`;
+    const headers = { "content-type": "application/json" };
+    for (const h of ["x-payment", "payment-signature"]) {
+      const v = req.get(h);
+      if (v) headers[h] = v;
+    }
+    const upstream = await fetch(url, { method: "POST", headers, body: JSON.stringify(req.body || {}) });
+    for (const h of ["payment-required", "payment-response", "x-payment-response"]) {
+      const v = upstream.headers.get(h);
+      if (v) res.set(h, v);
+    }
+    const text = await upstream.text();
+    res.status(upstream.status).type(upstream.headers.get("content-type") || "application/json").send(text);
+  } catch (e) {
+    res.status(502).json({ error: String((e && e.message) || e) });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.error(`PayQL Playground on :${PORT}`));
