@@ -60,4 +60,4 @@ The paid response includes an `X-PAYMENT-RESPONSE` header (base64) with the sett
 
 ## Funding
 
-Hold **USDC on Base** — no ETH needed (gasless). Fiat onramps require KYC, so seed the wallet once (human step); an agent then runs on USDC and can self-top-up by swapping. For server-side spend caps/allowlists, use an [Ampersend](https://ampersend.ai)-managed wallet.
+Hold **USDC on Base** — no ETH needed (gasless). **Use a dedicated, low-balance wallet** funded with only the USDC you intend to spend; seeding it is a one-time human step. This skill makes paid **reads** — it does not swap, trade, or auto-top-up the wallet, so keep funding a separate, human-approved action. For server-side spend caps/allowlists, use an [Ampersend](https://ampersend.ai)-managed wallet.

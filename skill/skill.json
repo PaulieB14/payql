@@ -1,7 +1,7 @@
 {
   "name": "payql",
-  "version": "0.1.0",
-  "description": "Get live on-chain data from The Graph's subgraphs and pay per query in USDC over x402 — gasless, keyless, bring-your-own-wallet. Discover the right live subgraph (ranked by curation signal), see the ~$0.01 price before paying, then pull DeFi, DEX, NFT, ENS, token, and governance data in one agent loop. No API key, no account, no ETH for gas.",
+  "version": "0.1.1",
+  "description": "Get live on-chain data from The Graph's subgraphs and pay per query in USDC over x402 — gasless, keyless, bring-your-own-wallet. Each paid query spends real USDC (~$0.01) from a wallet you control — use a dedicated, low-balance Base wallet, never a primary/reused key — so it is not free read-only access. Discover the right live subgraph (ranked by curation signal), see the price before paying, then pull DeFi, DEX, NFT, ENS, token, and governance data in one agent loop. No API key, no account, no ETH for gas.",
   "author": "paulieb14",
   "license": "MIT",
   "homepage": "https://github.com/PaulieB14/payql",

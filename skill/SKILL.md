@@ -1,7 +1,7 @@
 ---
 name: payql
-description: "Get live on-chain data from The Graph, paid per query in USDC over x402 — gasless, keyless, bring-your-own-wallet. Discover the right live subgraph, see the ~$0.01 price, then pull the data in one loop. Trigger keywords: subgraph, The Graph, GraphQL, on-chain data, DeFi, DEX, pool, TVL, swap, NFT, ENS, token holders, governance, x402, pay per query, USDC, Base, gateway."
-version: 0.1.0
+description: "Get live on-chain data from The Graph, paid per query in USDC over x402 — gasless, keyless, bring-your-own-wallet. Each query spends real USDC (~$0.01) from a wallet you control — use a dedicated, low-balance Base wallet. Discover the right live subgraph, see the price before paying, then pull the data in one loop. Trigger keywords: subgraph, The Graph, GraphQL, on-chain data, DeFi, DEX, pool, TVL, swap, NFT, ENS, token holders, governance, x402, pay per query, USDC, Base, gateway."
+version: 0.1.1
 homepage: https://github.com/PaulieB14/payql
 metadata:
   clawdbot:
@@ -11,6 +11,8 @@ metadata:
 # PayQL — pay-per-query data from The Graph
 
 Get **live on-chain data** from The Graph's subgraphs (DeFi, DEX pools, NFTs, ENS, tokens, governance — 15,000+ subgraphs across 20+ chains), paying ~**$0.01 USDC per query** over [x402](https://x402.org). **No API key, no account, no ETH for gas** — the payment *is* the auth, and it's gasless (EIP-3009 `transferWithAuthorization` on Base).
+
+> 💸 **This spends real USDC.** Every paid query is a live on-chain micropayment (~$0.01) from your wallet — it is **not** a free, read-only API, and the payment is visible on-chain and to the x402 facilitator. Quote the price first (free), and fund a **dedicated, low-balance wallet** — see [Wallet & safety](#wallet--safety).
 
 ## The loop: discover → price → query
 
@@ -36,6 +38,8 @@ Install and wire into your harness (Claude Desktop / Code / Cursor):
 }
 ```
 
+> ⚠️ **`PAYQL_PRIVATE_KEY` can spend its wallet's USDC.** Use a **dedicated, low-balance Base wallet** — never a primary, valuable, or reused key. It sits in your harness config (which can be logged, synced, or screenshotted), so treat it like any secret: don't commit it or paste it in shared chats. Don't want a raw key here? Use **option B** (your harness's own wallet) or an [Ampersend](https://ampersend.ai)-managed wallet with spend caps.
+
 Tools: `search_subgraphs`, `get_payment_info` (free price quote), `query_subgraph` (paid), `get_subgraph_schema`, `wallet_status`. Full recipe + example queries in [references/gateway.md](references/gateway.md).
 
 ### B. No install — use your harness's own wallet
@@ -47,6 +51,9 @@ If your harness already has an x402 / `pay-for-service` capability, hit the gate
 
 Full no-install recipe (discovery query, pricing, examples) in [references/gateway.md](references/gateway.md).
 
-## Wallet & funding
+## Wallet & safety
 
-Fund a Base wallet with **USDC only** — payments are gasless, so no ETH is required. Want spend caps/allowlists? Use an [Ampersend](https://ampersend.ai)-managed wallet (see the [PayQL README](https://github.com/PaulieB14/payql#using-ampersend-optional)). The per-query cost is **$0.01** — there are no API keys, subscriptions, or platform fees; the x402 micropayment is the only cost.
+- **Use a dedicated, low-balance Base wallet** funded with only the USDC you intend to spend — **never a primary, valuable, or reused key.** `PAYQL_PRIVATE_KEY` can spend that wallet's USDC.
+- Fund with **USDC only** — payments are gasless, so no ETH is required. The per-query cost is **$0.01**; there are no API keys, subscriptions, or platform fees.
+- This skill is for paid **reads**. It does **not** swap, trade, or auto-top-up your wallet — keep any funding or top-up a separate, human-approved action.
+- Don't want a raw key in your config? Use **option B** (your harness's own wallet), or an [Ampersend](https://ampersend.ai)-managed wallet with **server-side spend caps + allowlists** (see the [PayQL README](https://github.com/PaulieB14/payql#using-ampersend-optional)).
