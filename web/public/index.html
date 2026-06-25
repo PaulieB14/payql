@@ -112,6 +112,7 @@
       <span class="badge">gasless</span>
       <span class="badge">no API key</span>
       <span class="badge">pay-per-query</span>
+      <a class="badge" href="https://x402-watch.vercel.app" target="_blank" rel="noopener" style="color:var(--acc);border-color:rgba(110,168,255,.35);text-decoration:none">📊 see payments live ↗</a>
     </div>
   </header>
 
@@ -196,7 +197,8 @@ async function doPay(p, btn) {
     btn.textContent = "Paying…";
     const r = await wallet.payQuery(p.subgraphId, p.query);
     const paid = `<div class="row"><span class="ic">✅</span><span>Paid ${usd(p.priceUsd)} from ${short(r.payer)}
-      ${r.txHash ? `· tx ${short(r.txHash)} · <a href="https://basescan.org/tx/${r.txHash}" target="_blank" rel="noopener">basescan ↗</a>` : ""}</span></div>`;
+      ${r.txHash ? `· tx ${short(r.txHash)} · <a href="https://basescan.org/tx/${r.txHash}" target="_blank" rel="noopener">basescan ↗</a>` : ""}</span></div>
+      <div class="self" style="margin-top:6px">▶ <a href="https://x402-watch.vercel.app" target="_blank" rel="noopener">watch it land on the live x402 dashboard ↗</a> <span class="muted">(appears within ~1 min)</span></div>`;
     const data = r.errors ? `<pre class="warn">${esc(JSON.stringify(r.errors, null, 2))}</pre>` : `<pre>${esc(JSON.stringify(r.data, null, 2))}</pre>`;
     add("bot", paid + data);
     btn.textContent = "✓ Done — run again?";
